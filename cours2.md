@@ -1,6 +1,6 @@
 # Cours c# avancé
 
-### Classes , Interfaces et héritage/Implémentation
+### Classes
 
 Comme nous l'avons vu précédemment en C# tout code appartient à une classe, et toute variable est soit une instance de classe comme une Liste<T> par exemple soit une structure(Nous verrons la différence juste après) 
 
@@ -49,13 +49,41 @@ public class Joueur : Personnage{
 
 Enfin voila, un Monstre héritera de toutes les propriétés de ses parents, et des parents de ses parents etc.
 
+### Modificateurs d'accessibilités
+
+#### Public/Private/Protected
+
+##### Pour une classe
+
+- **Public** indique que la classe peut être appelée et utilisée par tout projet 
+- **Private** indique que cette classe ne peut être utilisée que par son propre projet
+- Le défaut est **Private**
+
+##### Pour un élément de classe
+
+- **Public** indique qu'il peut être appelé par toute autre classe
+- **Private** indique qu'il ne peut-être appelé que par des instances de cette classe
+- **Protected** indique qu'il ne peut-être appelé que par des instances de cette classe ou d'une classe qui en hérite
+- Le défaut est **Private**
+
+#### Static
+
+##### Pour un élément de classe
+
+Il indique qu'il n'y a pas besoin d'instance de la classe pour être appelé. Une variable (propriété ou champs) statique n'aura qu'une seule valeur pour tout le programme.
+Pour une fonction c'est le même principe il n'y aura pas besoin d'instance de la classe pour l'appeler.
+
+##### Pour une classe
+
+Cela indique que tous les éléments de la classe doivent être static et qu'il est impossible de créer une instance de la classe avec le mot clé **new**
+
 #### Abstract
 
 Une classe abstract veut dire qu'elle ne peut être utilisée comme telle, et nécessite d'être héritée.
 Dans notre exemple, la classe **Personnage** est abstract car n'avons pas a l'utiliser tel quelle.
 Un personnage est soit un Monstre soit un Joueur. Pourtant les 2 peuvent bénéficier de la fonction **Déplacer**
 
-#### Interfaces
+### Interfaces
 
 Comme dit plus haut, une interface est un contrat que doit remplir une classe.
 En C# une classe ne peut hériter que d'une seule autre classe mais peut implémenter de nombreuses interfaces.
@@ -227,15 +255,15 @@ static public async Task Main(){
 }
 ```
 
-### Exercice 4 : 
+### Exercice 4 (45 minutes): 
 
-Implémenter l'interface suivante en se basant sur le service REST écrit plus haut.
+Implémenter l'interface suivante en se basant sur le service REST écrit plus haut. ([Json database](https://jsonplaceholder.typicode.com/))
 
 ```c#
 public interface IBlogRepository
 {
-    Post GetFullPost(int id);
-    IEnumerable<Post> GetPosts();
+    Post GetFullPost(int id); //Commentaires, et user inclus
+    IEnumerable<Post> GetPosts(); //Sans commentaires
 }
 ```
 
@@ -259,30 +287,3 @@ User user = await client.GetFromJsonAsync<User>("users/1");//Necessite la classe
 
 
 
-### Modificateurs d'accessibilités
-
-#### Public/Private/Protected
-
-##### Pour une classe
-
-- **Public** indique que la classe peut être appelée et utilisée par tout projet 
-- **Private** indique que cette classe ne peut être utilisée que par son propre projet
-- Le défaut est **Private**
-
-##### Pour un élément de classe
-
-- **Public** indique qu'il peut être appelé par toute autre classe
-- **Private** indique qu'il ne peut-être appelé que par des instances de cette classe
-- **Protected** indique qu'il ne peut-être appelé que par des instances de cette classe ou d'une classe qui en hérite
-- Le défaut est **Private**
-
-#### Static
-
-##### Pour un élément de classe
-
-Il indique qu'il n'y a pas besoin d'instance de la classe pour être appelé. Une variable (propriété ou champs) statique n'aura qu'une seule valeur pour tout le programme.
-Pour une fonction c'est le même principe il n'y aura pas besoin d'instance de la classe pour l'appeler.
-
-##### Pour une classe
-
-Cela indique que tous les éléments de la classe doivent être static et qu'il est impossible de créer une instance de la classe avec le mot clé **new**

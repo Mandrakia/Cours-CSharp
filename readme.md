@@ -302,7 +302,7 @@ Console.WriteLine(myArray[0]);
 
 Cela écrira 1.
 
-Comme expliqué plus haut les tableaux ont une taille **fixe** en C# il n'y a donc par de méthode Push ou Splice
+Comme expliqué plus haut les tableaux ont une taille **fixe** en C# il n'y a donc pas de méthode Push ou Splice
 
 Pour obtenir la taille d'un tableau il faut appeler la propriété **Length**
 
@@ -317,10 +317,10 @@ var lengthY = grid.GetLength(1);
 #### Les listes
 
 En C# les listes sont ce qui se rapproche le plus d'un tableau Javascript.
-Contrairement aux tableaux les listes ont une taille variable on peut y ajouter et retirer des éléments, comme tout en C# les listes sont fortement typées
+Contrairement aux tableaux les listes ont une taille variable on peut y ajouter et retirer des éléments, comme tout en C# les listes sont fortement typées (Il existe une variante non typée mais à ne jamais utiliser !! bouhou)
 
 ```c#
-var myList = new List<int>();
+var myList = new List<int>(){1,2,3,4,5,6};
 var myListString = new List<string>(){"abc","def","ghi","jkl"};
 ```
 
@@ -388,13 +388,13 @@ Dans le répo GitHub se trouve le fichier exercice2.txt. Le but de l'exercice es
 
 
 
-### IEnumerable<T> et Linq
+### `IEnumerable<T>` et Linq
 
-En C# quasiment toutes les collections implémentent l'interface IEnumerable<T>
+En C# quasiment toutes les collections implémentent l'interface `IEnumerable<T>`
 
 Nous reviendrons plus tard sur ce qu'est une interface mais pour simplifier il s'agit d'un contrat que tout classe qui l'implémente se doit de remplir.
 
-En C# toute classe qui implémente IEnumerable ou sa variante fortement typée (Générique) IEnumerable<T> peut rentrer dans une boucle foreach.
+En C# toute classe qui implémente IEnumerable ou sa variante fortement typée (Générique) `IEnumerable<T>` peut rentrer dans une boucle foreach.
 
 ```c#
 var chaine = "Vive le C#";
