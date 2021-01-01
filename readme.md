@@ -159,6 +159,65 @@ public int Multiply(int a,int b)
 
 Ici nous déclarons une méthode **Multiply** qui attend 2 arguments a et b (tous deux int) et qui retournera un int
 
+### Value vs Reference type
+
+En C# toute variable est soit une structure(**struct**) soit un objet(**class**) les 2 se comportent différemment lorsqu'il sont passés en argument
+
+```c#
+static public void Main(){
+    var nombre = 2;
+    ModifierNombre(nombre);
+    Console.WriteLine(nombre); // Affichera 2.
+}
+static public ModifierNombre(int nombre)
+{
+    nombre = nombre + 2;
+}
+```
+
+Lorsqu'une structure est passée en argument de fonction (ici un integer 2), c'est une copie qui est envoyée et non une référence vers la variable.
+Toute modification n'impactera donc pas le scope de l'appelant.
+
+A l'inverse pour les classes se sont des références qui sont envoyées a la fonction (pointeurs...) donc : 
+
+```c#
+public class Test{
+    public string Nom {get;set;}
+}
+public class Program{
+    static public void Main(){
+        var toto = new Test(){ Nom = "Bob"};
+        ModifyName(toto);
+        Console.WriteLine(toto.Nom); // Barbara
+    }
+    static void ModifyNom(Test t){
+        t.Nom = "Barbara";
+    }
+}
+```
+
+Ici nous avons aussi vu l'initialisation d'un objet grâce au raccourci : 
+
+```c#
+var bob = new Test(){ Nom = "Toto"};
+```
+
+Il est cependant possible d'envoyer une structure en tant que référence pour cela la fonction et l'appel doivent utiliser le mot clef ref
+
+```c#
+public static void Main(){
+    var nb = 2;
+    Modify(ref nb);
+    Console.WriteLine(nb); // 4
+}
+public static void Modify(ref int toto)
+{
+    toto +=2;
+}
+```
+
+
+
 ### Premier programme / Exercice (Temps : 15 min)
 
 Comme vu au dessus pour écrire sur la console il faut taper : 
@@ -306,7 +365,7 @@ var result = myHashString.Contains("abc"); // Idem
 Le dictionnaire permet d'associer une clef avec une valeur et bénéficie des performances du HashSet
 
 ```c#
-var myDict = new Dictionary<string,int>();
+var myDict = new Dictionary<string,int>(); // La clef est de type STRING et la valeur de type INT
 myDict["toto"] = 5;
 var result = myDict["toto"]; //Très très rapide
 if(myDict.ContainsKey("toto"))
@@ -317,32 +376,221 @@ if(myDict.ContainsKey("toto"))
 
 ### Deuxième programme / Exercice : 15 minutes
 
+Pour ouvrir un fichier et en lire son contenu une des méthodes est : 
+
+```c#
+var pt = File.ReadAllLines("exercice2.txt");
+```
+
+Cela retournera un tableau de string donc **string[]**
+
+Dans le répo GitHub se trouve le fichier exercice2.txt. Le but de l'exercice est d'afficher dans la console la somme des chiffres.
 
 
-### Les mots clés public/private/static/protected/abstract
 
-#### Public/Private/Protected
+### IEnumerable<T> et Linq
 
-##### Pour une classe
+En C# quasiment toutes les collections implémentent l'interface IEnumerable<T>
 
-Public indique que la classe peut être appelée et utilisée par tout projet 
-A l'inverse Private indique que cette classe ne peut être utilisée que par son propre projet
-Le défaut est **Private**
+Nous reviendrons plus tard sur ce qu'est une interface mais pour simplifier il s'agit d'un contrat que tout classe qui l'implémente se doit de remplir.
 
-##### Pour un élément de classe
+En C# toute classe qui implémente IEnumerable ou sa variante fortement typée (Générique) IEnumerable<T> peut rentrer dans une boucle foreach.
 
-Public indique qu'il peut etre appelé par toute autre classe
-Private indique qu'il ne peut-être appelé que par des instances de cette classe
-Protected indique qu'il ne peut-être appelé que par des instances de cette classe ou d'une classe qui en hérite
+```c#
+var chaine = "Vive le C#";
+foreach(var chara in chaine)
+{
+    Console.Write(chara);
+}
+// Ouputs : Vive le C#
+```
 
-#### Static
+Mais ce n'est pas tout, il y en a en C# quelque chose qui s'appelle des méthodes d'extensions.
+Par exemple si vous trouvez qu'une classe ou une interface du framework manque d'une methode que vous souhaiteriez vous pouvez l'ajouter vous meme
 
-##### Pour un élement de classe
+```c#
+static public string RotateLeft(this string input,int steps = 1) //Exemple de méthode utile dans Advent Of Code par exemple...
+{
+    //abcdef devient bcdefa
+    return input.Substring(steps,input.Length-steps) + input.Substring(0, steps);
+}
 
-Il indique qu'il n'y a pas besoin d'instance de la classe pour etre appelé. Une variable (proprieté ou champs) statique n'aura qu'une seule valeur pour tout le programme.
-Pour une fonction c'est le même principe il n'y aura pas besoin d'instance de la classe pour l'appeler.
+static void Main()
+{
+    var result = "abcdef".RotateLeft();
+}
+```
 
-##### Pour une classe
+Ce qui nous ammène au Linq. C'est un set de méthode d'extension qui s'applique aux IEnumerable<T>
 
-Cela indique que tous les élements de la classe doivent etre static et qu'il est impossible de créer une instance de la classe avec le mot clé **new**
+Toutes les méthodes suivantes ne vont rien appliquer tant que le resultat n'est pas consumé par : 
+
+- Foreach
+- .ToList() ou .ToArray() ou autre variante
+
+#### Select
+
+```c#
+var liste = new List<string>(){"1","2","3","4"};
+var numbers = liste.Select(a=> int.Parse(a));
+```
+
+Select va appliquer à chaque élément de la liste la méthode fournie et retourner un IEnumerable<int> au lieu du IEnumerable<string> que nous avions au début. Nous aurions pu aussi écrire : 
+
+```c#
+var numbers = liste.Select(int.Parse);
+```
+
+Car la signature de int.Parse est la même que celle attendue par Select. Une fonction qui prend une string en paramètre et qui retourne quelque chose (donc non void)
+
+#### Where
+
+```c#
+var liste = new List<string>(){"1","2","3","4"};
+var numbers = liste.Select(a=> int.Parse(a));
+var numbSup2 = numbers.Where(a=> a >= 2);
+```
+
+Ici nous ne prenons que les nombres supérieurs ou égal a 2. 
+**Notez qu'aucune action n'a été encore prise car le résultat numbSup2 et numbers n'ont pas encore été consumés.**
+
+#### Sum / Min / Max / Average
+
+Ces fonctions sont assez explicites
+
+```c#
+var liste = new List<string>(){"1","2","3","4"};
+var numbers = liste.Select(a=> int.Parse(a));
+var sum = numbers.Sum();
+```
+
+#### Fonctions IEnumerable<T> 
+
+Une fonction peut être elle même un IEnumerable<T> grâce au mot clé **yield return**
+
+```c#
+static public IEnumerable<string> GetNames()
+{
+    yield return "Toto";
+    Console.WriteLine("Tata appelée");
+    yield return "Tata";
+    Console.WriteLine("Tonton appelé");
+    yield return "Tonton";
+}
+static void Main()
+{
+    var res = GetNames();
+    var toto = res.First(); // Aucune sortie console ne s'effectuera car l'énumération s'arretera au premier résultat.
+}
+```
+
+Evidemment ce n'est pas flagrant dans un exemple comme ça mais cette fonctionnalité est essentielle dans de nombreux cas.
+Nous verrons un exemple concret plus tard.
+
+###  Entrée/Sortie (I/O) et streams
+
+La plupart des échanges informatiques sont basés sur des flux ce qu'on appelle Stream.
+Lorsque l'on lit ou écrit un fichier, on lit ou écrit sur un flux de donnée que l'OS puis le contrôleur disque va transformer en réelle modification du système sous-jacent.
+
+Il en va de même lorsque l'on effectue un appel réseau comme HTTP la réponse et la requête sont tous deux des streams.
+
+La majorité de ces flux sont cachés par le framework et il n'est pas nécessaire la majorité du temps de comprendre comment cela fonctionne.
+Par exemple pour l'exercice 1 vous avez lu un tableau de ligne a partir d'un fichier sans ne jamais avoir à manipuler des flux.
+Voila comment la fonction .ReadAllLines peut être implémentée avec les flux:
+
+```c#
+static public List<string> GetContent()
+{
+    var res = new List<string>(); // Notre résultat
+    using(var fs = File.OpenRead("exercice2.txt")) // On ouvre le fichier. Le mot clé using sera expliqué plus bas
+    {
+        StreamReader str = new StreamReader(fs); //On a fs un flux de donnée binaire, on passe à str un flux de chaine de charactère
+        var line = string.Empty;
+        while((line = str.ReadLine())!= null) // Tant que l'on peut lire "line" et que line n'est pas null (a ne pas confondre avec string.Empty)
+        {
+            res.Add(line); //On ajoute la ligne au résultat
+        }
+    }
+    return res;
+}
+```
+
+Voila notre propre implémentation basique de ReadAllLines. 
+
+Imaginez les flux comme un tableau ou on ne peut qu'incrémenter l'index. Très peu de flux permettent de revenir en arrière.
+Un flux réseau ne permettra jamais de revenir en arrière par exemple. Une fois que la donnée est reçue, on ne va pas demander a l'émetteur "ah au fait revient un peu en arrière stp j'ai merdé"
+
+Il y a des flux d'entrée et des flux de sortie. En entrée on va effectuer des opérations comme Read() ReadBytes() etc...
+
+A l'inverse dans un flux de sortie on va écrire avec Write() WriteBytes etc.
+
+#### Mot-clé Using
+
+Dans l'exemple au dessus nous utilisons le mot-clé using.
+Son utilisation indique qu'à la fin du bloc (y compris en cas d'exception) on doit appeler la méthode .Dispose() de l'objet (ici fs)
+
+La méthode **dispose** est présente sur tout objet qui implémente l'interface IDisposable.
+
+Cela permet au programme de savoir : "J'en ai fini avec toi, libère toutes les ressources associées".
+
+Dans le cas de notre fichier, vous avez déja du avoir un message d'erreur lorsque vous voulez effacer un fichier : "Ce fichier est utilisé par un programme en cours d'execution et ne peut etre effacé". Lorsque l'on modifie un fichier ou qu'on le lit, on effectue ce que l'on appelle un file Lock pour indiquer a l'os que l'on travaille dessus.
+Ce lock empêche entre autre l'effacement du fichier.
+
+Pour en revenir a notre using, le using indique justement a l'os de libérer ce lock car on en a fini avec.
+
+```c#
+void ExempleBadPractice()
+{
+    var fs = File.OpenRead("exercice2.txt");
+    // bla bla bla
+    fs.Dispose();
+}
+```
+
+Dans la majorité des cas cela fera le même travaille que notre using au dessus. Sauf que s'il y a une exception, le dispose ne sera jamais appelé et notre fichier ne sera jamais libéré. (<u>Et j'en parle même pas pour délivré</u>)
+
+L'implémentation exacte de using est : 
+
+```c#
+void Exemple()
+{
+    var fs = File.OpenRead("exercice2.txt")
+    try
+    {
+        // bla bla bla
+    }
+    finally
+    {
+        fs.Dispose();
+    }
+}
+```
+
+### Manipulation de strings
+
+Comme dans tous les langages le framework .Net offre de nombreuses fonctions de manipulation de **string**
+
+Nous n'allons détailler que celles les plus utilisées.
+
+```c#
+static void Main(){
+    var text = "abc def ghi";
+    var subText = text.Substring(0,3); // abc, je prend 3 charactères commençant a l'index 0
+    subText = text.Substring(4); // def ghi , je prend tous les charactères a partir de l'index 4
+    var splits = text.Split(' '); // tableau ["abc","def","ghi"]
+    var joinedString = splits.Aggregate((a,b)=> a + " " + b); // on revient a "abc def ghi"
+}
+```
+
+
+
+### Exercice 3 ensemble : 45 min
+
+Avec tout ce que l'on a vu jusqu'a présent nous sommes capables de créer un lecteur de fichier CSV performant.
+
+Pour être considéré comme performant notre lecteur CSV doit etre capable de lire/analyser les données sans jamais les charger intégralement en mémoire.
+
+Pour rappel le CSV (Comma separated values) est un format de fichier très populaire car il permet de stocker de très grandes quantités de donnée et d'être lu à la volée.
+
+Nous nous baserons sur le fichier csv [trouvable ici](http://eforexcel.com/wp/downloads-18-sample-csv-files-data-sets-for-testing-sales/) le 5millions évidemment.
 
