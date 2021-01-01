@@ -227,6 +227,34 @@ static public async Task Main(){
 }
 ```
 
+### Exercice 4 : 
+
+Implémenter l'interface suivante en se basant sur le service REST écrit plus haut.
+
+```c#
+public interface IBlogRepository
+{
+    Post GetFullPost(int id);
+    IEnumerable<Post> GetPosts();
+}
+```
+
+Pour executer un appel réseau HTTP il faut utiliser : 
+
+```c#
+var client = new HttpClient()
+{
+    BaseAddress = new Uri("https://jsonplaceholder.typicode.com")
+};
+```
+
+Il va falloir réutiliser cet objet car il a un certains cout en ressources. (On reviendra dessus plus tard)
+Ensuite pour faire un appel GET et le désérialiser directement dans une classe : 
+
+```c#
+User user = await client.GetFromJsonAsync<User>("users/1");//Necessite la classe User évidemment.
+```
+
 
 
 
