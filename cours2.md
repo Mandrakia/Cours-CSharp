@@ -1,6 +1,6 @@
 # Cours c# avancé
 
-### Classes
+### Héritage
 
 Comme nous l'avons vu précédemment en C# tout code appartient à une classe, et toute variable est soit une instance de classe comme une Liste<T> par exemple soit une structure(Nous verrons la différence juste après) 
 
@@ -49,6 +49,12 @@ public class Joueur : Personnage{
 
 Enfin voila, un Monstre héritera de toutes les propriétés de ses parents, et des parents de ses parents etc.
 
+#### Abstract
+
+Une classe abstract veut dire qu'elle ne peut être utilisée comme telle, et nécessite d'être héritée.
+Dans notre exemple, la classe **Personnage** est abstract car n'avons pas a l'utiliser tel quelle.
+Un personnage est soit un Monstre soit un Joueur. Pourtant les 2 peuvent bénéficier de la fonction **Déplacer**
+
 ### Modificateurs d'accessibilités
 
 #### Public/Private/Protected
@@ -76,12 +82,6 @@ Pour une fonction c'est le même principe il n'y aura pas besoin d'instance de l
 ##### Pour une classe
 
 Cela indique que tous les éléments de la classe doivent être static et qu'il est impossible de créer une instance de la classe avec le mot clé **new**
-
-#### Abstract
-
-Une classe abstract veut dire qu'elle ne peut être utilisée comme telle, et nécessite d'être héritée.
-Dans notre exemple, la classe **Personnage** est abstract car n'avons pas a l'utiliser tel quelle.
-Un personnage est soit un Monstre soit un Joueur. Pourtant les 2 peuvent bénéficier de la fonction **Déplacer**
 
 ### Interfaces
 
@@ -198,6 +198,8 @@ static public async Task<int> LongJob(){
 }
 ```
 
+Toute méthode `async`doit retourner une `Task<T>`
+
 Ici nous avons un gros calcul qui va durer 15 secondes et afficher le résultat. Il n'y a pas d'interret a le rendre asynchrone dans notre cas mais :
 
 ```c#
@@ -233,7 +235,7 @@ Async/Await est principalement utilisé dans les 3 cas suivants :
 - Lorsque l'on travaille sur une interface graphique (Jeux video, Application mobile, Desktop) et que l'on ne doit pas bloquer le thread principal
 - Lorsque l'on travaille sur un serveur web (Asp.Net)
 
-L'atout principal du mot clef **await** est qu'il libère le thread tant qu'il n'y a pas de résultat. Ce thread peut donc etre recyclé et utilisé a d'autre fins (Gérer de nouvelles connections, gérer le rendering 3D etc.) et dans certains cas c'est ce même thread ou un autre qui prendra la continuation du parcours.
+L'atout principal du mot clef `await` est qu'il libère le thread tant qu'il n'y a pas de résultat. Ce thread peut donc etre recyclé et utilisé a d'autre fins (Gérer de nouvelles connections, gérer le rendering 3D etc.) et dans certains cas c'est ce même thread ou un autre qui prendra la continuation du parcours.
 
 Par exemple sur un serveur Web qui pour notre exemple est bloqué a 2 threads.
 
@@ -262,8 +264,8 @@ Implémenter l'interface suivante en se basant sur le service REST écrit plus h
 ```c#
 public interface IBlogRepository
 {
-    Post GetFullPost(int id); //Commentaires, et user inclus
-    IEnumerable<Post> GetPosts(); //Sans commentaires
+    Task<Post> GetFullPost(int id); //Commentaires, et user inclus
+    Task<List<Post>> GetPosts(); //Sans commentaires
 }
 ```
 
