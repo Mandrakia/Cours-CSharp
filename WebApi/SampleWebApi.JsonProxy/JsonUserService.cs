@@ -14,6 +14,7 @@ namespace SampleWebApi.JsonProxy
 
         public JsonUserService(IHttpClientFactory factory) //Expliqué plus tard
         {
+            if(factory != null)
             HttpClient = factory.CreateClient("JsonPlaceholder"); //Expliqué plus tard
         }
         public Task CreateUser(User usr)

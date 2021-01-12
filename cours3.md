@@ -14,127 +14,81 @@ Nous allons quand même les détailler ici
 ```powershell
 mkdir WebApi
 cd WebApi
-dotnet new sln -n SampleWebApi
-dotnet new classlib -o SampleWebApi.Common
-dotnet new classlib -o SampleWebApi.PostgreSql
-dotnet new classlib -o SampleWebApi.JsonProxy
-dotnet new webapi -o SampleWebApi.WebApi
-dotnet sln SampleWebApi.sln add SampleWebApi.Common\SampleWebApi.Common.csproj --solution-folder Libraries
-dotnet sln SampleWebApi.sln add SampleWebApi.PostgreSql\SampleWebApi.PostgreSql.csproj --solution-folder Libraries
-dotnet sln SampleWebApi.sln add SampleWebApi.JsonProxy\SampleWebApi.JsonProxy.csproj --solution-folder Libraries
-dotnet sln SampleWebApi.sln add SampleWebApi.WebApi\SampleWebApi.WebApi.csproj
-
+dotnet new sln -n SimpleShop
+dotnet new classlib -o SimpleShop.Common
+dotnet new classlib -o SimpleShop.PostgreSql
+dotnet new webapi -o SimpleShop.WebApi
+dotnet sln SimpleShop.sln add SimpleShop.Common\SimpleShop.Common.csproj --solution-folder Libraries
+dotnet sln SimpleShop.sln add SimpleShop.PostgreSql\SimpleShop.PostgreSql.csproj --solution-folder Libraries
+dotnet sln SimpleShop.sln add SimpleShop.WebApi\SimpleShop.WebApi.csproj
+dotnet add SimpleShop.PostgreSql\SimpleShop.PostgreSql.csproj reference SimpleShop.Common\SimpleShop.Common.csproj
+dotnet add SimpleShop.WebApi\SimpleShop.WebApi.csproj reference SimpleShop.Common\SimpleShop.Common.csproj
+dotnet add SimpleShop.WebApi\SimpleShop.WebApi.csproj reference SimpleShop.PostgreSql\SimpleShop.PostgreSql.csproj
 ```
 
-Ce qui devrait vous donner ceci dans Visual Studio : 
+Ce qui devrait vous donner ceci dans Visual Studio Code : 
 
-![image-20210102131611459](https://i.imgur.com/v5PKSNP.png)
+![image-20210112164044050](https://i.imgur.com/4Mmzb4x.png)
 
 Dans `Common`nous mettrons les modèles et les interfaces utilisées
-Dans `JsonProxy` nous mettrons notre provider développé a l'exercice 4
 Dans `PostgreSql` nous mettrons notre premier projet utilisant **Entity Framework**
 
 Et enfin dans `WebApi` se trouvera nos routes, nos contrôleurs etc.
 
 ### Première étape définir les modèles
 
-Avant de coder quoique ce soit il est essentiel de définir quels sont les objets que nous allons manipuler en base de donnée (Sql,Json,Csv ou autre)
-Ici nous allons utiliser le jeu de donnée utilisé précédemment dans l'exercice 4 donc les modèles devraient déja être faits mais au cas où :
+Pour la suite de ce cours nous allons nous baser sur : [Ce site d'un bar à jeu parisien](https://goodgameparis.fr/jeux/)
 
-#### User.cs
+Avant de coder quoique ce soit il est essentiel de définir quels sont les objets que nous allons manipuler en base de donnée (Sql,Json,Csv ou autre)
+
+#### Product.cs
 
 ```c#
-namespace SampleWebApi.Common.Entities
+namespace SimpleShop.Common.Entities
 {
-    public class User
+    public class Product
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public Address Address { get; set; }
-        public string Phone { get; set; }
-        public string Website { get; set; }
-        public Company Company { get; set; }
-    }
-    public class Address
-    {
-        public string Street { get; set; }
-        public string Suite { get; set; }
-        public string City { get; set; }
-        public string ZipCode { get; set; }
-        public GeoLocation Geo { get; set; }
-    }
-    public class GeoLocation
-    {
-        public decimal Lat { get; set; }
-        public decimal Lng { get; set; }
-    }
-    public class Company
-    {
-        public string Name { get; set; }
-        public string CatchPhrase { get; set; }
-        public string Bs { get; set; }
+        public string Description { get; set; }
+        public int MinPlayer { get; set; }
+        public int MaxPlayer { get; set; }
+        public int MinDuration { get; set; }
+        public int MaxDuration { get; set; }
+        public decimal? Price { get; set; }
+        public List<Tag> Tags { get; set;}
+        public Difficulty Difficulty { get; set; }
     }
 }
 ```
 
-#### Post.cs
+#### Difficulty.cs
 
 ```c#
-namespace SampleWebApi.Common.Entities
+namespace SimpleShop.Common.Enums
 {
-    public class Post
+    public enum Difficulty{
+        Facile = 0,
+        Intermédiaire=1,
+        Expert=2
+    }
+}
+```
+
+
+
+#### Tag.cs
+
+```c#
+namespace SimpleShop.Common.Entities
+{
+    public class Tag
     {
-        public int UserId { get; set; }
         public int Id { get; set; }
         public string Title { get; set; }
-        public string Body { get; set; }
+        public List<Product> Products { get; set; }
     }
 }
-```
-
-#### Comment.cs
-
-```c#
-namespace SampleWebApi.Common.Entities
-{
-    public class Comment
-    {
-        public int PostId { get; set; }
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string Body { get; set; }
-    }
-}
-```
-
-Ce sont les modèles tels que trouvés dans l'API REST Json que nous avons utilisé pour l'exercice 4.
-
-Nous allons les modifier un peu pour rajouter ce que l'on appelle des propriétés de navigation.
-Par exemple un utilisateur est l'auteur de plusieurs posts. Donc nous allons ajouter une propriété à la classe User
-
-```c#
-public List<Post> Posts {get;set;}
-```
-
-Idem un post a plusieurs commentaires donc 
-
-```c#
-public List<Comment> Comments {get;set;}
-```
-
-Un post a un auteur donc : 
-
-```c#
-public User User {get;set;}
-```
-
-Et un commentaire a un post donc 
-
-```c#
-public Post Post {get;set;}
 ```
 
 
@@ -143,28 +97,16 @@ public Post Post {get;set;}
 
 Maintenant que nous avons nos modèles nous allons définir quelles actions nous souhaitons réaliser
 
-#### `IUserService.cs`
+#### `IGamesService.cs`
 
 ```c#
-namespace SampleWebApi.Common.Interfaces
+namespace SimpleShop.Common.Interfaces
 {
-    public interface IUserService
+    public interface IGamesService
     {
-        Task<List<User>> GetShortUsers();
-        Task<User> GetFullUser(int id);
-    }
-}
-```
-
-#### `IPostService.cs`
-
-```c#
-namespace SampleWebApi.Common.Interfaces
-{
-    public interface IPostService
-    {
-        Task<List<Post>> GetShortPosts();
-        Task<Post> GetFullPost(int id);
+        Task<Product> GetProduct(int id);
+        Task<List<Product>> GetAllProducts();
+        Task<List<Product>> GetFilteredProducts(ProductSearchQuery query);
     }
 }
 ```
@@ -173,68 +115,114 @@ Par convention les interfaces commencent par la lettre i majuscule. **I**Disposa
 
 Notre projet `Common`devrait ressembler à cela maintenant : 
 
-![image-20210102150155976](https://i.imgur.com/i9qZZyL.png)
+![image-20210112173335076](https://i.imgur.com/2AQL222.png)
 
-### Implémentation de l'interface dans JsonProxy
+### Création de notre DB Context : Étape finale vers notre base de donnée
 
-#### `JsonUserService.cs`
+Pour commencer nous allons installer le package EntityFrameworkCore dans notre projet SimpleShop.PostgreSql
+
+Pour faciliter les choses on va installer un plugin : 
+
+![image-20210112174517677](https://i.imgur.com/TeZMxf9.png)
+
+
+
+Une fois le plugin installé : ctrl shift P ou simplement F1 pour afficher les commandes VS Code et tapez Nuget , sélectionnez nuget Add.
+
+Tapez EntityFramework puis ensuite sélectionnez `Microsoft.EntityFrameworkCore` et la dernière version et enfin sélectionnez le projet PostgresSql
+
+
+
+Ensuite faites de même pour :
+
+EntityFrameworkCore dans WebApi
+
+EntityFrameworkCode.Design dans WebApi
+
+Npgsql.EntityFrameworkCode.PostgreSQL dans WebApi et dans PostgreSQL
+
+
+
+Le DbContext est l'objet qui va représenter notre base de donnée, il aura un `DbSet<T>` par entité, pour nous ça sera `Products` et `Tags` 
+C'est dans le DbContext que l'on va définir aussi le schéma. Quelle colonne porte quelle clé, quelle colonne ou jeu de colonne est indexé etc.
+
+
 
 ```c#
-namespace SampleWebApi.JsonProxy
-{
-    public class JsonUserService : IUserService
-    {
-        public HttpClient HttpClient {get;set;}
-        
-        public JsonUserService(IHttpClientFactory factory) //Expliqué plus tard
-        {
-            HttpClient = factory.CreateClient("JsonPlaceholder"); //Expliqué plus tard
-        }
-        
-        public async Task<User> GetFullUser(int id)
-        {
-            var user = await HttpClient.GetFromJsonAsync<User>($"users/{id}");
-            user.Posts = await HttpClient.GetFromJsonAsync<List<Post>>($"users/{id}/posts");
-            return user;
-        }
+using System;
+using Microsoft.EntityFrameworkCore;
+using SimpleShop.Common.Entities;
 
-        public Task<List<User>> GetShortUsers()
+namespace SimpleShop.PostgreSql
+{
+    public class SimpleShopContext : DbContext
+    {
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+
+        public SimpleShopContext(DbContextOptions<SimpleShopContext> options) : base(options)
         {
-            return HttpClient.GetFromJsonAsync<List<User>>("users");
+
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Product>(x =>
+            {
+                x.HasKey(a => a.Id);
+
+                x.HasMany(a => a.Tags)
+                    .WithMany(a => a.Products);
+            });
         }
     }
 }
+
 ```
 
-#### `JsonPostService.cs`
+
+
+Ici nous définissons nos deux DbSet : Products et Tags et nous indiquons dans le schéma que la clé de Product est Id (Il le déduit tout seul mais c'est pour l'exemple).
+Nous indiquons aussi une relation many-to-many entre product et tag.
+
+#### Deuxieme étape la migration
+
+Maintenant que notre schéma est prêt nous allons l'historiser. C'est à dire nous allons sauvegarder ce schéma pour le versionner.
+
+Pour ce faire il est nécessaire que l'outil sache sur quel système de base de donnée on va appliquer ce schéma. 
+La méthode la plus simple dans notre cas est de configurer l'utilisation de notre DbContext dans notre WebApi.
+
+#### `Startup.cs`
+
+Rajoutez dans `ConfigureServices` : 
 
 ```c#
-namespace SampleWebApi.JsonProxy
-{
-    public class JsonPostService : IPostService
-    {
-        public JsonPostService(IHttpClientFactory factory)
-        {
-            HttpClient = factory.CreateClient("JsonPlaceholder");
-        }
-
-        public HttpClient HttpClient { get; }
-
-        public async Task<Post> GetFullPost(int id)
-        {
-            var post = await HttpClient.GetFromJsonAsync<Post>($"posts/{id}");
-            post.User = await HttpClient.GetFromJsonAsync<User>($"users/{post.UserId}");
-            post.Comments = await HttpClient.GetFromJsonAsync<List<Comment>>($"posts/{id}/comments");
-            return post;
-        }
-
-        public Task<List<Post>> GetShortPosts()
-        {
-            return HttpClient.GetFromJsonAsync<List<Post>>("posts");
-        }
-    }
-}
+services.AddDbContext<SimpleShopContext>(x=>{
+    x.UseNpgsql("Host=localhost;Database=SimpleShopSolo;Username=postgres;Password=azerty");
+});
 ```
+
+
+
+Une fois que c'est fait nous pouvons historiser notre version de la base de donnée avec :
+
+```powershell
+dotnet tool install --global dotnet-ef  #a n'executer qu'une seule fois, installe le tool en global
+cd SimpleShop.PostgreSql
+dotnet ef migrations add "Modele initial" -s ..\SimpleShop.WebApi\
+
+```
+
+Sauvegarde notre modele sous le nom "Modele initial" en nous basant sur la configuration définie dans la WebApi
+
+```powershell
+dotnet ef database update -s ..\SimpleShop.WebApi\
+```
+
+
+
+
+
+
 
 ### Notre WebAPI : ENFIN !
 
